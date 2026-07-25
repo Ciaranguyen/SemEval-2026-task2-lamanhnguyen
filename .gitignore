@@ -1,0 +1,6 @@
+results/
+data/
+nrc_vad/
+nrc_vad.zip
+src/__pycache__/
+*.pth

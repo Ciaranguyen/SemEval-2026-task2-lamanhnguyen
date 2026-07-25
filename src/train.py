@@ -68,7 +68,7 @@ def train_one_model(cfg: dict, variant: str, target: str = None,
         uw_loss_fn = UncertaintyWeightedLoss().to(device)
         params += list(uw_loss_fn.parameters())
 
-    optimizer = AdamW(params, lr=train_cfg["lr"])
+    optimizer = AdamW(params, lr=train_cfg["lr"], weight_decay=0.0)
     scheduler = get_linear_schedule_with_warmup(
         optimizer, num_warmup_steps=0, num_training_steps=len(train_loader) * train_cfg["epochs"]
     )

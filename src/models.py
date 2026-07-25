@@ -23,7 +23,7 @@ class AffectModel(nn.Module):
     def __init__(self, model_name: str = "microsoft/deberta-v3-base",
                  dropout: float = 0.1, multitask: bool = True):
         super().__init__()
-        self.backbone = AutoModel.from_pretrained(model_name)
+        self.backbone = AutoModel.from_pretrained(model_name, torch_dtype=torch.float32)
         self.multitask = multitask
         hidden_size = self.backbone.config.hidden_size
         self.dropout = nn.Dropout(dropout)

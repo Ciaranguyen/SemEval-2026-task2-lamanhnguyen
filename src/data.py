@@ -97,3 +97,32 @@ class AffectDataset(Dataset):
             "attention_mask": enc["attention_mask"].flatten(),
             "targets": torch.tensor([self.valences[idx], self.arousals[idx]], dtype=torch.float),
         }
+
+
+def load_test_subtask1(raw_dir: str, filename: str, cols: dict):
+    """Đọc file nhãn test THẬT của Subtask 1 (có is_seen_user để tách Seen/Unseen)."""
+    import os
+    path = os.path.join(raw_dir, filename)
+    df = pd.read_csv(path)
+    text_col, v_col, a_col = cols["text"], cols["valence"], cols["arousal"]
+    keep = [text_col, v_col, a_col]
+    if "is_seen_user" in df.columns:
+        keep.append("is_seen_user")
+    if cols.get("user_id") in df.columns:
+        keep.append(cols["user_id"])
+    sub = df[keep].copy()
+    sub = sub.rename(columns={text_col: "text", v_col: "valence", a_col: "arousal"})
+    sub = clean_dataframe(sub)
+    n_seen = sub["is_seen_user"].sum() if "is_seen_user" in sub.columns else None
+    print(f"Test Subtask 1: {len(sub)} dong"
+          + (f" | Seen: {n_seen} | Unseen: {len(sub)-n_seen}" if n_seen is not None else ""))
+    return sub
+
+
+def load_test_subtask2ab(raw_dir: str, filename: str):
+    """Đọc file nhãn test Subtask 2A+2B (mỗi dòng = 1 user, có state_change_* và disp_change_*)."""
+    import os
+    path = os.path.join(raw_dir, filename)
+    df = pd.read_csv(path)
+    print(f"Test Subtask 2A+2B: {len(df)} user")
+    return df

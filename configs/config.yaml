@@ -18,7 +18,7 @@ data:
     timestamp: "timestamp"
     is_words: "is_words"      # True = danh sách từ cảm xúc rời rạc, False = đoạn văn (essay)
   val_split: 0.1
-  seed: 42
+  seed: 123
 
 # THANG ĐO THẬT — xác nhận bằng .unique() trên toàn bộ train_subtask1.csv
 # Valence: 5 mức {-2,-1,0,1,2} | Arousal: 3 mức {0,1,2} — KHÔNG đối xứng, KHÁC giả định "-3..3" trước đây
