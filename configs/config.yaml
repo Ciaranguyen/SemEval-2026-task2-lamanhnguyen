@@ -1,0 +1,99 @@
+# =============================================================
+# Central configuration for SemEval-2026 Task 2 pipeline
+# ĐÃ CẬP NHẬT theo dữ liệu thật (kiểm tra trực tiếp từ train_subtask1.csv)
+# =============================================================
+
+data:
+  raw_dir: "data/raw"
+  train_files:
+    - "train_subtask1.csv"
+    - "train_subtask2a.csv"
+  # Tên cột thật trong dataset gốc (KHÔNG phải giả định trước đây)
+  columns:
+    text: "text"
+    valence: "valence"
+    arousal: "arousal"
+    user_id: "user_id"
+    text_id: "text_id"
+    timestamp: "timestamp"
+    is_words: "is_words"      # True = danh sách từ cảm xúc rời rạc, False = đoạn văn (essay)
+  val_split: 0.1
+  seed: 42
+
+# THANG ĐO THẬT — xác nhận bằng .unique() trên toàn bộ train_subtask1.csv
+# Valence: 5 mức {-2,-1,0,1,2} | Arousal: 3 mức {0,1,2} — KHÔNG đối xứng, KHÁC giả định "-3..3" trước đây
+scale:
+  valence_min: -2.0
+  valence_max: 2.0
+  arousal_min: 0.0
+  arousal_max: 2.0
+
+model:
+  name: "microsoft/deberta-v3-base"
+  max_len: 128            # xem notebooks/check_token_length.py để có số liệu thật bảo vệ lựa chọn này
+  dropout: 0.1
+
+training:
+  v1:
+    epochs: 4
+    lr: 2.0e-5
+    batch_size: 16
+    dropout: 0.1
+    save_path: "results/checkpoints/deberta_affect_v1.pth"
+    multitask: true
+  v3:
+    epochs: 6
+    lr: 1.0e-5
+    batch_size: 16
+    dropout: 0.3
+    save_path: "results/checkpoints/deberta_affect_v3.pth"
+    multitask: true
+  # Bậc so sánh mới (Trục 1): single-task, dùng cùng backbone nhưng CHỈ 1 head
+  bert_singletask:
+    backbone: "bert-base-uncased"
+    epochs: 4
+    lr: 2.0e-5
+    batch_size: 16
+    save_path: "results/checkpoints/bert_singletask.pth"
+    multitask: false
+  deberta_singletask:
+    backbone: "microsoft/deberta-v3-base"
+    epochs: 4
+    lr: 2.0e-5
+    batch_size: 16
+    save_path: "results/checkpoints/deberta_singletask.pth"
+    multitask: false
+
+ensemble:
+  weight_v1: 0.6
+  weight_v3: 0.4
+
+smoothing:
+  alpha: 0.1
+  scale_2a: 0.1
+  scale_2b: 0.05
+
+baselines:
+  tfidf_max_features: 5000
+  ridge_alpha: 1.0
+  lexicon_path: "data/raw/NRC-VAD-Lexicon.txt"
+  # Baseline CHÍNH THỨC của ban tổ chức: linear(BERT) — Ridge Regression trên
+  # embedding BERT-base-uncased ĐÃ ĐÓNG BĂNG (frozen, không fine-tune), lấy
+  # trung bình cộng token embedding (mean pooling), KHÔNG phải random baseline.
+  official_bert_frozen: "bert-base-uncased"
+
+# Trục 2: chiến lược multi-task loss để so sánh
+multitask_loss:
+  strategy: "fixed_weight"    # đổi thành "uncertainty_weighting" để dùng Kendall et al. 2018
+  lambda_v: 1.0
+  lambda_a: 1.0
+
+analysis:
+  error_top_percentile: 95
+  negative_words:
+    - "tired"
+    - "exhausted"
+    - "stressed"
+    - "overwhelmed"
+    - "anxious"
+    - "drained"
